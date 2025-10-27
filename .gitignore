@@ -1,4 +1,11 @@
-.vscode
+.gitcookies
+.idea
+.vscode/
+.DS_Store
 .coverage
+coverage.out
+coverage.xml
+*.test
 vendor
-Gopkg*
+dist/
+builds/
