@@ -84,7 +84,3 @@ func (c *Client) Send(method, endpoint string, params map[string]string) (*http.
 func (c *Client) getURL(endpoint string) string {
 	return fmt.Sprintf("%s/%s/%s", c.baseurl, c.version, endpoint)
 }
-
-func (c *Client) stillAuthorized() error {
-	return c.token.valid()
-}
