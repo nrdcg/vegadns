@@ -1,4 +1,5 @@
 # vegadns2client
+
 vegadns2client is a go client for [VegaDNS-API](https://github.com/shupp/VegaDNS-API).  This is an incomplete client, initially intended to support [lego](https://github.com/xenolf/lego).
 
 ## Example Usage
@@ -10,7 +11,7 @@ package main
 
 import (
     "fmt"
-    "github.com/opendns/vegadns2client"
+    "github.com/nrdcg/vegadns2client"
 )
 
 func main() {
@@ -40,7 +41,7 @@ package main
 
 import (
     "fmt"
-    "github.com/opendns/vegadns2client"
+    "github.com/nrdcg/vegadns2client"
 )
 
 func main() {
