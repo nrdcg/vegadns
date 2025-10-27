@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -32,10 +33,15 @@ type RecordsResponse struct {
 
 // GetRecordID helper to get the id of a record.
 func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordType string) (int, error) {
-	params := make(map[string]string)
-	params["domain_id"] = strconv.Itoa(domainID)
+	params := make(url.Values)
+	params.Set("domain_id", strconv.Itoa(domainID))
 
-	resp, err := c.Send(ctx, http.MethodGet, "records", params)
+	req, err := c.newRequest(ctx, http.MethodGet, c.baseURL.JoinPath("records"), params)
+	if err != nil {
+		return -1, err
+	}
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return -1, fmt.Errorf("get record ID: %w", err)
 	}
@@ -67,15 +73,19 @@ func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordTy
 
 // CreateTXT creates a TXT record.
 func (c *Client) CreateTXT(ctx context.Context, domainID int, fqdn, value string, ttl int) error {
-	params := make(map[string]string)
+	params := make(url.Values)
+	params.Set("record_type", "TXT")
+	params.Set("ttl", strconv.Itoa(ttl))
+	params.Set("domain_id", strconv.Itoa(domainID))
+	params.Set("name", strings.TrimSuffix(fqdn, "."))
+	params.Set("value", value)
 
-	params["record_type"] = "TXT"
-	params["ttl"] = strconv.Itoa(ttl)
-	params["domain_id"] = strconv.Itoa(domainID)
-	params["name"] = strings.TrimSuffix(fqdn, ".")
-	params["value"] = value
+	req, err := c.newRequest(ctx, http.MethodPost, c.baseURL.JoinPath("records"), params)
+	if err != nil {
+		return err
+	}
 
-	resp, err := c.Send(ctx, http.MethodPost, "records", params)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("create TXT record: %w", err)
 	}
@@ -96,10 +106,16 @@ func (c *Client) CreateTXT(ctx context.Context, domainID int, fqdn, value string
 
 // DeleteRecord deletes a record by id.
 func (c *Client) DeleteRecord(ctx context.Context, recordID int) error {
-	resp, err := c.Send(ctx, http.MethodDelete, fmt.Sprintf("records/%d", recordID), nil)
+	req, err := c.newRequest(ctx, http.MethodDelete, c.baseURL.JoinPath("records", strconv.Itoa(recordID)), nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("delete record: %w", err)
 	}
+
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)

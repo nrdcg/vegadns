@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -27,10 +28,15 @@ type DomainResponse struct {
 
 // GetDomainID - returns the id for a domain.
 func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
-	params := make(map[string]string)
-	params["search"] = domain
+	params := make(url.Values)
+	params.Set("search", domain)
 
-	resp, err := c.Send(ctx, http.MethodGet, "domains", params)
+	req, err := c.newRequest(ctx, http.MethodGet, c.baseURL.JoinPath("domains"), params)
+	if err != nil {
+		return -1, err
+	}
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return -1, fmt.Errorf("get domain ID: %w", err)
 	}

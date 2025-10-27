@@ -33,26 +33,18 @@ func NewClient(baseURL string) (*Client, error) {
 	}, nil
 }
 
-// Send a request to VegaDNS.
-func (c *Client) Send(ctx context.Context, method, urn string, params map[string]string) (*http.Response, error) {
-	endpoint := c.baseURL.JoinPath(urn)
-
-	data := url.Values{}
-	for k, v := range params {
-		data.Set(k, v)
-	}
-
+func (c *Client) newRequest(ctx context.Context, method string, endpoint *url.URL, params url.Values) (*http.Request, error) {
 	var (
 		err error
 		req *http.Request
 	)
 
 	if method == http.MethodGet || method == http.MethodDelete {
-		endpoint.RawQuery = data.Encode()
+		endpoint.RawQuery = params.Encode()
 
 		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), nil)
 	} else {
-		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), strings.NewReader(data.Encode()))
+		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), strings.NewReader(params.Encode()))
 	}
 
 	if err != nil {
@@ -84,5 +76,5 @@ func (c *Client) Send(ctx context.Context, method, urn string, params map[string
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	return c.client.Do(req)
+	return req, nil
 }
