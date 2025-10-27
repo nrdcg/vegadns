@@ -1,13 +1,15 @@
-build:
-	go build -v .
+.PHONY: all
+all: build test check
 
+.PHONY: build
+build:
+	go build -trimpath
+
+.PHONY: test
 test:
-	mkdir -p .coverage
-	go vet -v
-	go get -u github.com/golang/lint/golint
-	golint -set_exit_status
-	go test -v -cover -coverprofile .coverage/cover.out
-	go tool cover -html=.coverage/cover.out -o .coverage/index.html
-	@echo ""
-	@echo "To see test coverage, try:"
-	@echo "open .coverage/index.html"
+	go test -count=1 -cover -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+
+.PHONY: check
+check:
+	golangci-lint run
