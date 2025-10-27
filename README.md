@@ -10,17 +10,24 @@ vegadns2client is a go client for [VegaDNS-API](https://github.com/shupp/VegaDNS
 package main
 
 import (
+	"context"
     "fmt"
 
     "github.com/nrdcg/vegadns2client"
 )
 
 func main() {
-    v := vegadns2client.NewClient("http://localhost:5000")
+    v, err := vegadns2client.NewClient("http://localhost:5000")
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.Background()
+	
     v.APIKey = "mykey"
     v.APISecret = "mysecret"
 
-    authZone, domainID, err := v.GetAuthZone("example.com")
+    authZone, domainID, err := v.GetAuthZone(ctx, "example.com")
     fmt.Println(authZone, domainID, err)
 }
 ```
@@ -41,27 +48,34 @@ foobar.com <nil>
 package main
 
 import (
-    "fmt"
+	"context"
+	"fmt"
 
-    "github.com/nrdcg/vegadns2client"
+	"github.com/nrdcg/vegadns2client"
 )
 
 func main() {
-    v := vegadns2client.NewClient("http://localhost:5000")
-    v.APIKey = "mykey"
-    v.APISecret = "mysecret"
+	v, err := vegadns2client.NewClient("http://localhost:5000")
+	if err != nil {
+		panic(err)
+	}
 
-    authZone, domainID, err := v.GetAuthZone("example.com")
-    fmt.Println(authZone, domainID, err)
+	v.APIKey = "mykey"
+	v.APISecret = "mysecret"
 
-    result := v.CreateTXT(domainID, "_acme-challenge.example.com", "test challenge", 25)
-    fmt.Println(result)
+	ctx := context.Background()
+	
+	authZone, domainID, err := v.GetAuthZone(ctx, "example.com")
+	fmt.Println(authZone, domainID, err)
 
-    recordID, err := v.GetRecordID(domainID, "_acme-challenge.example.com", "TXT")
-    fmt.Println(recordID, err)
+	result := v.CreateTXT(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
+	fmt.Println(result)
 
-    err = v.DeleteRecord(recordID)
-    fmt.Println(err)
+	recordID, err := v.GetRecordID(ctx, domainID, "_acme-challenge.example.com", "TXT")
+	fmt.Println(recordID, err)
+
+	err = v.DeleteRecord(ctx, recordID)
+	fmt.Println(err)
 }
 ```
 
