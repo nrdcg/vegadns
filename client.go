@@ -11,7 +11,7 @@ import (
 
 type Client struct {
 	client    *http.Client
-	baseurl   string
+	baseURL   string
 	version   string
 	User      string
 	Pass      string
@@ -21,10 +21,10 @@ type Client struct {
 }
 
 // NewClient create a new [Client].
-func NewClient(url string) Client {
-	return Client{
+func NewClient(baseURL string) *Client {
+	return &Client{
 		client:  &http.Client{Timeout: 15 * time.Second},
-		baseurl: url,
+		baseURL: baseURL,
 		version: "1.0",
 	}
 }
@@ -83,5 +83,5 @@ func (c *Client) Send(ctx context.Context, method, endpoint string, params map[s
 }
 
 func (c *Client) getURL(endpoint string) string {
-	return fmt.Sprintf("%s/%s/%s", c.baseurl, c.version, endpoint)
+	return fmt.Sprintf("%s/%s/%s", c.baseURL, c.version, endpoint)
 }
