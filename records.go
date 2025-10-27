@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -41,7 +41,7 @@ func (vega *VegaDNSClient) GetRecordID(domainID int, record string, recordType s
 		return -1, fmt.Errorf("Error sending GET to GetRecordID: %s", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return -1, fmt.Errorf("Error reading response from GetRecordID: %s", err)
 	}
@@ -81,7 +81,7 @@ func (vega *VegaDNSClient) CreateTXT(domainID int, fqdn string, value string, tt
 		return fmt.Errorf("Send POST error in CreateTXT: %s", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("Error reading POST response in CreateTXT: %s", err)
 	}
@@ -101,7 +101,7 @@ func (vega *VegaDNSClient) DeleteRecord(recordID int) error {
 		return fmt.Errorf("Send DELETE error in DeleteTXT: %s", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("Error reading DELETE response in DeleteTXT: %s", err)
 	}

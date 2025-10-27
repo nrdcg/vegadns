@@ -3,7 +3,7 @@ package vegadns2client
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -37,7 +37,7 @@ func (vega *VegaDNSClient) GetDomainID(domain string) (int, error) {
 		return -1, fmt.Errorf("Error sending GET to GetDomainID: %s", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return -1, fmt.Errorf("Error reading response from GET to GetDomainID: %s", err)
 	}

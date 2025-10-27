@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -56,7 +56,7 @@ func (vega *VegaDNSClient) getAuthToken() {
 		log.Fatalf("Error sending POST to getAuthToken: %s", err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatalf("Error reading response from POST to getAuthToken: %s", err)
 	}
