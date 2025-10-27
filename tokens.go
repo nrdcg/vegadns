@@ -57,7 +57,7 @@ func (c *Client) getAuthToken(ctx context.Context) error {
 
 	issueTime := time.Now().UTC()
 
-	resp, err := c.client.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("get auth token: %w", err)
 	}

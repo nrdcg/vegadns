@@ -2,9 +2,7 @@ package vegadns2client
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -36,25 +34,11 @@ func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
 		return -1, err
 	}
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return -1, fmt.Errorf("get domain ID: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return -1, fmt.Errorf("get domain ID: response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return -1, fmt.Errorf("get domain ID: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
-	}
-
 	answer := DomainResponse{}
-	if err := json.Unmarshal(body, &answer); err != nil {
-		return -1, fmt.Errorf("get domain ID: unmarshalling body: %w", err)
+
+	err = c.do(req, http.StatusOK, &answer)
+	if err != nil {
+		return -1, err
 	}
 
 	for _, d := range answer.Domains {
@@ -63,7 +47,7 @@ func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
 		}
 	}
 
-	return -1, fmt.Errorf("get domain ID: domain %s not found", domain)
+	return -1, fmt.Errorf("domain %s not found", domain)
 }
 
 // GetAuthZone retrieves the closest match to a given domain.

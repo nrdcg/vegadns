@@ -2,7 +2,9 @@ package vegadns2client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -32,7 +34,7 @@ func WithOAuth(key, secret string) Option {
 func WithHTTPClient(client *http.Client) Option {
 	return func(c *Client) error {
 		if client == nil {
-			c.client = client
+			c.httpClient = client
 		}
 
 		return nil
@@ -48,9 +50,9 @@ type Client struct {
 	apiKey    string
 	apiSecret string
 
-	client  *http.Client
-	baseURL *url.URL
-	token   Token
+	httpClient *http.Client
+	baseURL    *url.URL
+	token      Token
 }
 
 // NewClient create a new [Client].
@@ -61,8 +63,8 @@ func NewClient(baseURL string, opts ...Option) (*Client, error) {
 	}
 
 	c := &Client{
-		client:  &http.Client{Timeout: 15 * time.Second},
-		baseURL: bu.JoinPath("1.0"),
+		httpClient: &http.Client{Timeout: 15 * time.Second},
+		baseURL:    bu.JoinPath("1.0"),
 	}
 
 	for _, opt := range opts {
@@ -119,4 +121,35 @@ func (c *Client) newRequest(ctx context.Context, method string, endpoint *url.UR
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return req, nil
+}
+
+func (c *Client) do(req *http.Request, expectedStatusCode int, result any) error {
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != expectedStatusCode {
+		body, _ := io.ReadAll(resp.Body)
+
+		return fmt.Errorf("bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
+	}
+
+	if result == nil {
+		return nil
+	}
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(raw, result)
+	if err != nil {
+		return fmt.Errorf("unmarshalling: %w", err)
+	}
+
+	return nil
 }

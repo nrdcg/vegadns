@@ -2,10 +2,7 @@ package vegadns2client
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -41,25 +38,11 @@ func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordTy
 		return -1, err
 	}
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return -1, fmt.Errorf("get record ID: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return -1, fmt.Errorf("get record ID: response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return -1, fmt.Errorf("get record ID: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
-	}
-
 	answer := RecordsResponse{}
-	if err := json.Unmarshal(body, &answer); err != nil {
-		return -1, fmt.Errorf("get record ID: unmarshalling body: %w", err)
+
+	err = c.do(req, http.StatusOK, &answer)
+	if err != nil {
+		return -1, err
 	}
 
 	for _, r := range answer.Records {
@@ -68,7 +51,7 @@ func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordTy
 		}
 	}
 
-	return -1, errors.New("get record ID: record not found")
+	return -1, errors.New("record not found")
 }
 
 // CreateTXT creates a TXT record.
@@ -85,23 +68,7 @@ func (c *Client) CreateTXT(ctx context.Context, domainID int, fqdn, value string
 		return err
 	}
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("create TXT record: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("create TXT record: response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("create TXT record: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return c.do(req, http.StatusCreated, nil)
 }
 
 // DeleteRecord deletes a record by id.
@@ -111,21 +78,5 @@ func (c *Client) DeleteRecord(ctx context.Context, recordID int) error {
 		return err
 	}
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("delete record: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("delete record: response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("delete record: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
-	}
-
-	return nil
+	return c.do(req, http.StatusOK, nil)
 }
