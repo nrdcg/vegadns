@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
-// Record - struct representing a Record object
+// Record - struct representing a Record object.
 type Record struct {
 	Name       string `json:"name"`
 	Value      string `json:"value"`
@@ -20,7 +21,7 @@ type Record struct {
 	DomainID   int    `json:"domain_id"`
 }
 
-// RecordsResponse - api response list of records
+// RecordsResponse - api response list of records.
 type RecordsResponse struct {
 	Status  string   `json:"status"`
 	Total   int      `json:"total_records"`
@@ -30,28 +31,30 @@ type RecordsResponse struct {
 
 // GetRecordID - helper to get the id of a record
 // Input: domainID, record, recordType
-// Output: int
-func (vega *VegaDNSClient) GetRecordID(domainID int, record string, recordType string) (int, error) {
+// Output: int.
+func (vega *VegaDNSClient) GetRecordID(domainID int, record, recordType string) (int, error) {
 	params := make(map[string]string)
-	params["domain_id"] = fmt.Sprintf("%d", domainID)
+	params["domain_id"] = strconv.Itoa(domainID)
 
-	resp, err := vega.Send("GET", "records", params)
-
+	resp, err := vega.Send(http.MethodGet, "records", params)
 	if err != nil {
-		return -1, fmt.Errorf("Error sending GET to GetRecordID: %s", err)
+		return -1, fmt.Errorf("get record ID: %w", err)
 	}
+
 	defer resp.Body.Close()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return -1, fmt.Errorf("Error reading response from GetRecordID: %s", err)
+		return -1, fmt.Errorf("get record ID: response: %w", err)
 	}
+
 	if resp.StatusCode != http.StatusOK {
-		return -1, fmt.Errorf("Got bad answer from VegaDNS on GetRecordID. Code: %d. Message: %s", resp.StatusCode, string(body))
+		return -1, fmt.Errorf("get record ID: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
 	}
 
 	answer := RecordsResponse{}
 	if err := json.Unmarshal(body, &answer); err != nil {
-		return -1, fmt.Errorf("Error unmarshalling body from GetRecordID: %s", err)
+		return -1, fmt.Errorf("get record ID: unmarshalling body: %w", err)
 	}
 
 	for _, r := range answer.Records {
@@ -60,33 +63,35 @@ func (vega *VegaDNSClient) GetRecordID(domainID int, record string, recordType s
 		}
 	}
 
-	return -1, errors.New("Couldnt find record")
+	return -1, errors.New("get record ID: record not found")
 }
 
 // CreateTXT - Creates a TXT record
 // Input: domainID, fqdn, value, ttl
-// Output: nil or error
-func (vega *VegaDNSClient) CreateTXT(domainID int, fqdn string, value string, ttl int) error {
+// Output: nil or error.
+func (vega *VegaDNSClient) CreateTXT(domainID int, fqdn, value string, ttl int) error {
 	params := make(map[string]string)
 
 	params["record_type"] = "TXT"
-	params["ttl"] = fmt.Sprintf("%d", ttl)
-	params["domain_id"] = fmt.Sprintf("%d", domainID)
+	params["ttl"] = strconv.Itoa(ttl)
+	params["domain_id"] = strconv.Itoa(domainID)
 	params["name"] = strings.TrimSuffix(fqdn, ".")
 	params["value"] = value
 
 	resp, err := vega.Send("POST", "records", params)
-
 	if err != nil {
-		return fmt.Errorf("Send POST error in CreateTXT: %s", err)
+		return fmt.Errorf("create TXT record: %w", err)
 	}
+
 	defer resp.Body.Close()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("Error reading POST response in CreateTXT: %s", err)
+		return fmt.Errorf("create TXT record: response: %w", err)
 	}
+
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Got bad answer from VegaDNS on CreateTXT. Code: %d. Message: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("create TXT record: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
 	}
 
 	return nil
@@ -94,19 +99,21 @@ func (vega *VegaDNSClient) CreateTXT(domainID int, fqdn string, value string, tt
 
 // DeleteRecord - deletes a record by id
 // Input: recordID
-// Output: nil or error
+// Output: nil or error.
 func (vega *VegaDNSClient) DeleteRecord(recordID int) error {
-	resp, err := vega.Send("DELETE", fmt.Sprintf("records/%d", recordID), nil)
+	resp, err := vega.Send(http.MethodDelete, fmt.Sprintf("records/%d", recordID), nil)
 	if err != nil {
-		return fmt.Errorf("Send DELETE error in DeleteTXT: %s", err)
+		return fmt.Errorf("delete record: %w", err)
 	}
 	defer resp.Body.Close()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("Error reading DELETE response in DeleteTXT: %s", err)
+		return fmt.Errorf("delete record: response: %w", err)
 	}
+
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Got bad answer from VegaDNS on DeleteTXT. Code: %d. Message: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("delete record: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
 	}
 
 	return nil

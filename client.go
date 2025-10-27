@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
-// VegaDNSClient - Struct for holding VegaDNSClient specific attributes
+// VegaDNSClient - Struct for holding VegaDNSClient specific attributes.
 type VegaDNSClient struct {
 	client    http.Client
 	baseurl   string
@@ -19,10 +20,18 @@ type VegaDNSClient struct {
 	token     Token
 }
 
-// Send - Central place for sending requests
-// Input: method, endpoint, params
-// Output: *http.Response
-func (vega *VegaDNSClient) Send(method string, endpoint string, params map[string]string) (*http.Response, error) {
+// NewVegaDNSClient - helper to instantiate a client.
+func NewVegaDNSClient(url string) VegaDNSClient {
+	return VegaDNSClient{
+		client:  http.Client{Timeout: 15 * time.Second},
+		baseurl: url,
+		version: "1.0",
+		token:   Token{},
+	}
+}
+
+// Send - Central place for sending requests.
+func (vega *VegaDNSClient) Send(method, endpoint string, params map[string]string) (*http.Response, error) {
 	vegaURL := vega.getURL(endpoint)
 
 	p := url.Values{}
@@ -30,10 +39,12 @@ func (vega *VegaDNSClient) Send(method string, endpoint string, params map[strin
 		p.Set(k, v)
 	}
 
-	var err error
-	var req *http.Request
+	var (
+		err error
+		req *http.Request
+	)
 
-	if (method == "GET") || (method == "DELETE") {
+	if method == http.MethodGet || method == http.MethodDelete {
 		vegaURL = fmt.Sprintf("%s?%s", vegaURL, p.Encode())
 		req, err = http.NewRequest(method, vegaURL, nil)
 	} else {
@@ -41,7 +52,7 @@ func (vega *VegaDNSClient) Send(method string, endpoint string, params map[strin
 	}
 
 	if err != nil {
-		return nil, fmt.Errorf("Error preparing request: %s", err)
+		return nil, fmt.Errorf("preparing request: %w", err)
 	}
 
 	if vega.User != "" && vega.Pass != "" {
@@ -50,10 +61,12 @@ func (vega *VegaDNSClient) Send(method string, endpoint string, params map[strin
 	} else if vega.APIKey != "" && vega.APISecret != "" {
 		// OAuth
 		vega.getAuthToken()
+
 		err = vega.token.valid()
 		if err != nil {
 			return nil, err
 		}
+
 		req.Header.Set("Authorization", vega.getBearer())
 	}
 
