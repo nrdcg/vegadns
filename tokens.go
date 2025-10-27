@@ -14,10 +14,10 @@ import (
 
 // Token struct to hold token information.
 type Token struct {
-	Token     string `json:"access_token"`
-	TokenType string `json:"token_type"`
-	ExpiresIn int    `json:"expires_in"`
-	ExpiresAt time.Time
+	Token     string    `json:"access_token"`
+	TokenType string    `json:"token_type"`
+	ExpiresIn int       `json:"expires_in"`
+	ExpiresAt time.Time `json:"-"`
 }
 
 func (t Token) valid() error {
