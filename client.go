@@ -77,52 +77,6 @@ func NewClient(baseURL string, opts ...Option) (*Client, error) {
 	return c, nil
 }
 
-func (c *Client) newRequest(ctx context.Context, method string, endpoint *url.URL, params url.Values) (*http.Request, error) {
-	var (
-		err error
-		req *http.Request
-	)
-
-	if method == http.MethodGet || method == http.MethodDelete {
-		endpoint.RawQuery = params.Encode()
-
-		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), nil)
-	} else {
-		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), strings.NewReader(params.Encode()))
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("preparing request: %w", err)
-	}
-
-	if c.user != "" && c.pass != "" {
-		// Basic Auth
-		req.SetBasicAuth(c.user, c.pass)
-	} else if c.apiKey != "" && c.apiSecret != "" {
-		// OAuth
-		err := c.getAuthToken(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		err = c.token.valid()
-		if err != nil {
-			return nil, err
-		}
-
-		bearer, err := c.getBearer(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("Authorization", bearer)
-	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	return req, nil
-}
-
 func (c *Client) do(req *http.Request, expectedStatusCode int, result any) error {
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -149,6 +103,63 @@ func (c *Client) do(req *http.Request, expectedStatusCode int, result any) error
 	err = json.Unmarshal(raw, result)
 	if err != nil {
 		return fmt.Errorf("unmarshalling: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Client) newRequest(ctx context.Context, method string, endpoint *url.URL, params url.Values) (*http.Request, error) {
+	var (
+		err error
+		req *http.Request
+	)
+
+	if method == http.MethodGet || method == http.MethodDelete {
+		endpoint.RawQuery = params.Encode()
+
+		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), nil)
+	} else {
+		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), strings.NewReader(params.Encode()))
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("preparing request: %w", err)
+	}
+
+	err = c.setAuth(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	return req, nil
+}
+
+func (c *Client) setAuth(ctx context.Context, req *http.Request) error {
+	switch {
+	// Basic Auth
+	case c.user != "" && c.pass != "":
+		req.SetBasicAuth(c.user, c.pass)
+
+	// OAuth
+	case c.apiKey != "" && c.apiSecret != "":
+		err := c.getAuthToken(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = c.token.valid()
+		if err != nil {
+			return err
+		}
+
+		bearer, err := c.getBearer(ctx)
+		if err != nil {
+			return err
+		}
+
+		req.Header.Set("Authorization", bearer)
 	}
 
 	return nil
