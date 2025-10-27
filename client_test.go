@@ -21,7 +21,7 @@ func TestGetDomainID(t *testing.T) {
 	v.User = "user@example.com"
 	v.Pass = "secret"
 
-	domainID, err := v.GetDomainID("example.com")
+	domainID, err := v.GetDomainID(t.Context(), "example.com")
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, domainID)

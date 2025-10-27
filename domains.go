@@ -1,6 +1,7 @@
 package vegadns2client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,11 +26,11 @@ type DomainResponse struct {
 }
 
 // GetDomainID - returns the id for a domain.
-func (c *Client) GetDomainID(domain string) (int, error) {
+func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
 	params := make(map[string]string)
 	params["search"] = domain
 
-	resp, err := c.Send(http.MethodGet, "domains", params)
+	resp, err := c.Send(ctx, http.MethodGet, "domains", params)
 	if err != nil {
 		return -1, fmt.Errorf("get domain ID: %w", err)
 	}
@@ -62,7 +63,7 @@ func (c *Client) GetDomainID(domain string) (int, error) {
 // GetAuthZone retrieves the closest match to a given domain.
 // Example: Given an argument "a.b.c.d.e", and a VegaDNS hosted domain of "c.d.e",
 // GetClosestMatchingDomain will return "c.d.e".
-func (c *Client) GetAuthZone(fqdn string) (string, int, error) {
+func (c *Client) GetAuthZone(ctx context.Context, fqdn string) (string, int, error) {
 	fqdn = strings.TrimSuffix(fqdn, ".")
 
 	numComponents := len(strings.Split(fqdn, "."))
@@ -70,7 +71,7 @@ func (c *Client) GetAuthZone(fqdn string) (string, int, error) {
 		tmpHostname := strings.SplitN(fqdn, ".", i)[i-1]
 		log.Printf("tmpHostname for i = %d: %s\n", i, tmpHostname)
 
-		if domainID, err := c.GetDomainID(tmpHostname); err == nil {
+		if domainID, err := c.GetDomainID(ctx, tmpHostname); err == nil {
 			log.Printf("Found zone: %s\n\tShortened to %s\n", tmpHostname, strings.TrimSuffix(tmpHostname, "."))
 
 			return strings.TrimSuffix(tmpHostname, "."), domainID, nil

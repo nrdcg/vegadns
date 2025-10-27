@@ -1,6 +1,7 @@
 package vegadns2client
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -29,7 +30,7 @@ func NewClient(url string) Client {
 }
 
 // Send a request to VegaDNS.
-func (c *Client) Send(method, endpoint string, params map[string]string) (*http.Response, error) {
+func (c *Client) Send(ctx context.Context, method, endpoint string, params map[string]string) (*http.Response, error) {
 	vegaURL := c.getURL(endpoint)
 
 	p := url.Values{}
@@ -44,9 +45,9 @@ func (c *Client) Send(method, endpoint string, params map[string]string) (*http.
 
 	if method == http.MethodGet || method == http.MethodDelete {
 		vegaURL = fmt.Sprintf("%s?%s", vegaURL, p.Encode())
-		req, err = http.NewRequest(method, vegaURL, nil)
+		req, err = http.NewRequestWithContext(ctx, method, vegaURL, nil)
 	} else {
-		req, err = http.NewRequest(method, vegaURL, strings.NewReader(p.Encode()))
+		req, err = http.NewRequestWithContext(ctx, method, vegaURL, strings.NewReader(p.Encode()))
 	}
 
 	if err != nil {
@@ -58,7 +59,7 @@ func (c *Client) Send(method, endpoint string, params map[string]string) (*http.
 		req.SetBasicAuth(c.User, c.Pass)
 	} else if c.APIKey != "" && c.APISecret != "" {
 		// OAuth
-		err := c.getAuthToken()
+		err := c.getAuthToken(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +69,7 @@ func (c *Client) Send(method, endpoint string, params map[string]string) (*http.
 			return nil, err
 		}
 
-		bearer, err := c.getBearer()
+		bearer, err := c.getBearer(ctx)
 		if err != nil {
 			return nil, err
 		}

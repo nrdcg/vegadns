@@ -1,6 +1,7 @@
 package vegadns2client
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,11 +31,11 @@ type RecordsResponse struct {
 }
 
 // GetRecordID helper to get the id of a record.
-func (c *Client) GetRecordID(domainID int, record, recordType string) (int, error) {
+func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordType string) (int, error) {
 	params := make(map[string]string)
 	params["domain_id"] = strconv.Itoa(domainID)
 
-	resp, err := c.Send(http.MethodGet, "records", params)
+	resp, err := c.Send(ctx, http.MethodGet, "records", params)
 	if err != nil {
 		return -1, fmt.Errorf("get record ID: %w", err)
 	}
@@ -65,7 +66,7 @@ func (c *Client) GetRecordID(domainID int, record, recordType string) (int, erro
 }
 
 // CreateTXT creates a TXT record.
-func (c *Client) CreateTXT(domainID int, fqdn, value string, ttl int) error {
+func (c *Client) CreateTXT(ctx context.Context, domainID int, fqdn, value string, ttl int) error {
 	params := make(map[string]string)
 
 	params["record_type"] = "TXT"
@@ -74,7 +75,7 @@ func (c *Client) CreateTXT(domainID int, fqdn, value string, ttl int) error {
 	params["name"] = strings.TrimSuffix(fqdn, ".")
 	params["value"] = value
 
-	resp, err := c.Send("POST", "records", params)
+	resp, err := c.Send(ctx, http.MethodPost, "records", params)
 	if err != nil {
 		return fmt.Errorf("create TXT record: %w", err)
 	}
@@ -94,8 +95,8 @@ func (c *Client) CreateTXT(domainID int, fqdn, value string, ttl int) error {
 }
 
 // DeleteRecord deletes a record by id.
-func (c *Client) DeleteRecord(recordID int) error {
-	resp, err := c.Send(http.MethodDelete, fmt.Sprintf("records/%d", recordID), nil)
+func (c *Client) DeleteRecord(ctx context.Context, recordID int) error {
+	resp, err := c.Send(ctx, http.MethodDelete, fmt.Sprintf("records/%d", recordID), nil)
 	if err != nil {
 		return fmt.Errorf("delete record: %w", err)
 	}

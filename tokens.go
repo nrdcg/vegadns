@@ -1,6 +1,7 @@
 package vegadns2client
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,9 +32,9 @@ func (t Token) formatBearer() string {
 	return "Bearer " + t.Token
 }
 
-func (c *Client) getBearer() (string, error) {
+func (c *Client) getBearer(ctx context.Context) (string, error) {
 	if c.token.valid() != nil {
-		err := c.getAuthToken()
+		err := c.getAuthToken(ctx)
 		if err != nil {
 			return "", err
 		}
@@ -42,13 +43,13 @@ func (c *Client) getBearer() (string, error) {
 	return c.token.formatBearer(), nil
 }
 
-func (c *Client) getAuthToken() error {
+func (c *Client) getAuthToken(ctx context.Context) error {
 	tokenEndpoint := c.getURL("token")
 
 	v := url.Values{}
 	v.Set("grant_type", "client_credentials")
 
-	req, err := http.NewRequest(http.MethodPost, tokenEndpoint, strings.NewReader(v.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenEndpoint, strings.NewReader(v.Encode()))
 	if err != nil {
 		return fmt.Errorf("get auth token: %w", err)
 	}
