@@ -9,7 +9,7 @@ import (
 )
 
 type Client struct {
-	client    http.Client
+	client    *http.Client
 	baseurl   string
 	version   string
 	User      string
@@ -22,10 +22,9 @@ type Client struct {
 // NewClient create a new [Client].
 func NewClient(url string) Client {
 	return Client{
-		client:  http.Client{Timeout: 15 * time.Second},
+		client:  &http.Client{Timeout: 15 * time.Second},
 		baseurl: url,
 		version: "1.0",
-		token:   Token{},
 	}
 }
 
