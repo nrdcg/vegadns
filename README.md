@@ -11,11 +11,12 @@ package main
 
 import (
     "fmt"
+
     "github.com/nrdcg/vegadns2client"
 )
 
 func main() {
-    v := vegadns2client.NewVegaDNSClient("http://localhost:5000")
+    v := vegadns2client.NewClient("http://localhost:5000")
     v.APIKey = "mykey"
     v.APISecret = "mysecret"
 
@@ -41,11 +42,12 @@ package main
 
 import (
     "fmt"
+
     "github.com/nrdcg/vegadns2client"
 )
 
 func main() {
-    v := vegadns2client.NewVegaDNSClient("http://localhost:5000")
+    v := vegadns2client.NewClient("http://localhost:5000")
     v.APIKey = "mykey"
     v.APISecret = "mysecret"
 

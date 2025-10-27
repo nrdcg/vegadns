@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// Domain - struct containing a domain object.
+// Domain struct containing a domain object.
 type Domain struct {
 	Status   string `json:"status"`
 	Domain   string `json:"domain"`
@@ -17,21 +17,19 @@ type Domain struct {
 	OwnerID  int    `json:"owner_id"`
 }
 
-// DomainResponse - api response of a domain list.
+// DomainResponse api response of a domain list.
 type DomainResponse struct {
 	Status  string   `json:"status"`
 	Total   int      `json:"total_domains"`
 	Domains []Domain `json:"domains"`
 }
 
-// GetDomainID - returns the id for a domain
-// Input: domain
-// Output: int, err.
-func (vega *VegaDNSClient) GetDomainID(domain string) (int, error) {
+// GetDomainID - returns the id for a domain.
+func (c *Client) GetDomainID(domain string) (int, error) {
 	params := make(map[string]string)
 	params["search"] = domain
 
-	resp, err := vega.Send(http.MethodGet, "domains", params)
+	resp, err := c.Send(http.MethodGet, "domains", params)
 	if err != nil {
 		return -1, fmt.Errorf("get domain ID: %w", err)
 	}
@@ -61,11 +59,10 @@ func (vega *VegaDNSClient) GetDomainID(domain string) (int, error) {
 	return -1, fmt.Errorf("get domain ID: domain %s not found", domain)
 }
 
-// GetAuthZone retrieves the closest match to a given
-// domain. Example: Given an argument "a.b.c.d.e", and a VegaDNS
-// hosted domain of "c.d.e", GetClosestMatchingDomain will return
-// "c.d.e".
-func (vega *VegaDNSClient) GetAuthZone(fqdn string) (string, int, error) {
+// GetAuthZone retrieves the closest match to a given domain.
+// Example: Given an argument "a.b.c.d.e", and a VegaDNS hosted domain of "c.d.e",
+// GetClosestMatchingDomain will return "c.d.e".
+func (c *Client) GetAuthZone(fqdn string) (string, int, error) {
 	fqdn = strings.TrimSuffix(fqdn, ".")
 
 	numComponents := len(strings.Split(fqdn, "."))
@@ -73,7 +70,7 @@ func (vega *VegaDNSClient) GetAuthZone(fqdn string) (string, int, error) {
 		tmpHostname := strings.SplitN(fqdn, ".", i)[i-1]
 		log.Printf("tmpHostname for i = %d: %s\n", i, tmpHostname)
 
-		if domainID, err := vega.GetDomainID(tmpHostname); err == nil {
+		if domainID, err := c.GetDomainID(tmpHostname); err == nil {
 			log.Printf("Found zone: %s\n\tShortened to %s\n", tmpHostname, strings.TrimSuffix(tmpHostname, "."))
 
 			return strings.TrimSuffix(tmpHostname, "."), domainID, nil

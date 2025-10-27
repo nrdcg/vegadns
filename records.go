@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Record - struct representing a Record object.
+// Record struct representing a Record object.
 type Record struct {
 	Name       string `json:"name"`
 	Value      string `json:"value"`
@@ -21,7 +21,7 @@ type Record struct {
 	DomainID   int    `json:"domain_id"`
 }
 
-// RecordsResponse - api response list of records.
+// RecordsResponse api response list of records.
 type RecordsResponse struct {
 	Status  string   `json:"status"`
 	Total   int      `json:"total_records"`
@@ -29,14 +29,12 @@ type RecordsResponse struct {
 	Records []Record `json:"records"`
 }
 
-// GetRecordID - helper to get the id of a record
-// Input: domainID, record, recordType
-// Output: int.
-func (vega *VegaDNSClient) GetRecordID(domainID int, record, recordType string) (int, error) {
+// GetRecordID helper to get the id of a record.
+func (c *Client) GetRecordID(domainID int, record, recordType string) (int, error) {
 	params := make(map[string]string)
 	params["domain_id"] = strconv.Itoa(domainID)
 
-	resp, err := vega.Send(http.MethodGet, "records", params)
+	resp, err := c.Send(http.MethodGet, "records", params)
 	if err != nil {
 		return -1, fmt.Errorf("get record ID: %w", err)
 	}
@@ -66,10 +64,8 @@ func (vega *VegaDNSClient) GetRecordID(domainID int, record, recordType string) 
 	return -1, errors.New("get record ID: record not found")
 }
 
-// CreateTXT - Creates a TXT record
-// Input: domainID, fqdn, value, ttl
-// Output: nil or error.
-func (vega *VegaDNSClient) CreateTXT(domainID int, fqdn, value string, ttl int) error {
+// CreateTXT creates a TXT record.
+func (c *Client) CreateTXT(domainID int, fqdn, value string, ttl int) error {
 	params := make(map[string]string)
 
 	params["record_type"] = "TXT"
@@ -78,7 +74,7 @@ func (vega *VegaDNSClient) CreateTXT(domainID int, fqdn, value string, ttl int) 
 	params["name"] = strings.TrimSuffix(fqdn, ".")
 	params["value"] = value
 
-	resp, err := vega.Send("POST", "records", params)
+	resp, err := c.Send("POST", "records", params)
 	if err != nil {
 		return fmt.Errorf("create TXT record: %w", err)
 	}
@@ -97,11 +93,9 @@ func (vega *VegaDNSClient) CreateTXT(domainID int, fqdn, value string, ttl int) 
 	return nil
 }
 
-// DeleteRecord - deletes a record by id
-// Input: recordID
-// Output: nil or error.
-func (vega *VegaDNSClient) DeleteRecord(recordID int) error {
-	resp, err := vega.Send(http.MethodDelete, fmt.Sprintf("records/%d", recordID), nil)
+// DeleteRecord deletes a record by id.
+func (c *Client) DeleteRecord(recordID int) error {
+	resp, err := c.Send(http.MethodDelete, fmt.Sprintf("records/%d", recordID), nil)
 	if err != nil {
 		return fmt.Errorf("delete record: %w", err)
 	}

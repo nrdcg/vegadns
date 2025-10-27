@@ -8,8 +8,7 @@ import (
 	"time"
 )
 
-// VegaDNSClient - Struct for holding VegaDNSClient specific attributes.
-type VegaDNSClient struct {
+type Client struct {
 	client    http.Client
 	baseurl   string
 	version   string
@@ -20,9 +19,9 @@ type VegaDNSClient struct {
 	token     Token
 }
 
-// NewVegaDNSClient - helper to instantiate a client.
-func NewVegaDNSClient(url string) VegaDNSClient {
-	return VegaDNSClient{
+// NewClient create a new [Client].
+func NewClient(url string) Client {
+	return Client{
 		client:  http.Client{Timeout: 15 * time.Second},
 		baseurl: url,
 		version: "1.0",
@@ -30,9 +29,9 @@ func NewVegaDNSClient(url string) VegaDNSClient {
 	}
 }
 
-// Send - Central place for sending requests.
-func (vega *VegaDNSClient) Send(method, endpoint string, params map[string]string) (*http.Response, error) {
-	vegaURL := vega.getURL(endpoint)
+// Send a request to VegaDNS.
+func (c *Client) Send(method, endpoint string, params map[string]string) (*http.Response, error) {
+	vegaURL := c.getURL(endpoint)
 
 	p := url.Values{}
 	for k, v := range params {
@@ -55,30 +54,30 @@ func (vega *VegaDNSClient) Send(method, endpoint string, params map[string]strin
 		return nil, fmt.Errorf("preparing request: %w", err)
 	}
 
-	if vega.User != "" && vega.Pass != "" {
+	if c.User != "" && c.Pass != "" {
 		// Basic Auth
-		req.SetBasicAuth(vega.User, vega.Pass)
-	} else if vega.APIKey != "" && vega.APISecret != "" {
+		req.SetBasicAuth(c.User, c.Pass)
+	} else if c.APIKey != "" && c.APISecret != "" {
 		// OAuth
-		vega.getAuthToken()
+		c.getAuthToken()
 
-		err = vega.token.valid()
+		err = c.token.valid()
 		if err != nil {
 			return nil, err
 		}
 
-		req.Header.Set("Authorization", vega.getBearer())
+		req.Header.Set("Authorization", c.getBearer())
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	return vega.client.Do(req)
+	return c.client.Do(req)
 }
 
-func (vega *VegaDNSClient) getURL(endpoint string) string {
-	return fmt.Sprintf("%s/%s/%s", vega.baseurl, vega.version, endpoint)
+func (c *Client) getURL(endpoint string) string {
+	return fmt.Sprintf("%s/%s/%s", c.baseurl, c.version, endpoint)
 }
 
-func (vega *VegaDNSClient) stillAuthorized() error {
-	return vega.token.valid()
+func (c *Client) stillAuthorized() error {
+	return c.token.valid()
 }

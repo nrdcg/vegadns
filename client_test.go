@@ -17,7 +17,7 @@ func TestGetDomainID(t *testing.T) {
 
 	t.Cleanup(server.Close)
 
-	v := NewVegaDNSClient(server.URL)
+	v := NewClient(server.URL)
 	v.User = "user@example.com"
 	v.Pass = "secret"
 

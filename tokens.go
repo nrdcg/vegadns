@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Token - struct to hold token information.
+// Token struct to hold token information.
 type Token struct {
 	Token     string `json:"access_token"`
 	TokenType string `json:"token_type"`
@@ -27,20 +27,20 @@ func (t Token) valid() error {
 	return nil
 }
 
-func (vega *VegaDNSClient) getBearer() string {
-	if vega.token.valid() != nil {
-		vega.getAuthToken()
-	}
-
-	return vega.token.formatBearer()
-}
-
 func (t Token) formatBearer() string {
 	return "Bearer " + t.Token
 }
 
-func (vega *VegaDNSClient) getAuthToken() {
-	tokenEndpoint := vega.getURL("token")
+func (c *Client) getBearer() string {
+	if c.token.valid() != nil {
+		c.getAuthToken()
+	}
+
+	return c.token.formatBearer()
+}
+
+func (c *Client) getAuthToken() {
+	tokenEndpoint := c.getURL("token")
 
 	v := url.Values{}
 	v.Set("grant_type", "client_credentials")
@@ -50,12 +50,12 @@ func (vega *VegaDNSClient) getAuthToken() {
 		log.Fatalf("get AuthToken: %s", err)
 	}
 
-	req.SetBasicAuth(vega.APIKey, vega.APISecret)
+	req.SetBasicAuth(c.APIKey, c.APISecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	issueTime := time.Now().UTC()
 
-	resp, err := vega.client.Do(req)
+	resp, err := c.client.Do(req)
 	if err != nil {
 		log.Fatalf("Error sending POST to getAuthToken: %s", err)
 	}
@@ -70,13 +70,13 @@ func (vega *VegaDNSClient) getAuthToken() {
 		log.Fatalf("Got bad answer from VegaDNS on getAuthToken. Code: %d. Message: %s", resp.StatusCode, string(body))
 	}
 
-	if err := json.Unmarshal(body, &vega.token); err != nil {
+	if err := json.Unmarshal(body, &c.token); err != nil {
 		log.Fatalf("Error unmarshalling body of POST to getAuthToken: %s", err)
 	}
 
-	if vega.token.TokenType != "bearer" {
+	if c.token.TokenType != "bearer" {
 		log.Fatal("We don't support anything except bearer tokens")
 	}
 
-	vega.token.ExpiresAt = issueTime.Add(time.Duration(vega.token.ExpiresIn) * time.Second)
+	c.token.ExpiresAt = issueTime.Add(time.Duration(c.token.ExpiresIn) * time.Second)
 }
