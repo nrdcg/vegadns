@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetDomainID(t *testing.T) {
+func TestClient_GetDomainID(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"domains":[{"domain_id" :1,"domain":"example.com","status":"active","owner_id":0}]}`))
@@ -17,11 +17,8 @@ func TestGetDomainID(t *testing.T) {
 
 	t.Cleanup(server.Close)
 
-	client, err := NewClient(server.URL)
+	client, err := NewClient(server.URL, WithBasicAuth("user@example.com", "secret"), WithHTTPClient(server.Client()))
 	require.NoError(t, err)
-
-	client.User = "user@example.com"
-	client.Pass = "secret"
 
 	domainID, err := client.GetDomainID(t.Context(), "example.com")
 	require.NoError(t, err)

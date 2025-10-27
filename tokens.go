@@ -52,7 +52,7 @@ func (c *Client) getAuthToken(ctx context.Context) error {
 		return fmt.Errorf("get auth token: %w", err)
 	}
 
-	req.SetBasicAuth(c.APIKey, c.APISecret)
+	req.SetBasicAuth(c.apiKey, c.apiSecret)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	issueTime := time.Now().UTC()

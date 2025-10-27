@@ -4,7 +4,7 @@ vegadns2client is a go client for [VegaDNS-API](https://github.com/shupp/VegaDNS
 
 ## Example Usage
 
-### An example of looking up the auth zone for a hostname:
+### Looking up the auth zone for a hostname
 
 ```go
 package main
@@ -17,15 +17,12 @@ import (
 )
 
 func main() {
-    v, err := vegadns2client.NewClient("http://localhost:5000")
+    v, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
 	if err != nil {
 		panic(err)
 	}
 
 	ctx := context.Background()
-	
-    v.APIKey = "mykey"
-    v.APISecret = "mysecret"
 
     authZone, domainID, err := v.GetAuthZone(ctx, "example.com")
     fmt.Println(authZone, domainID, err)
@@ -42,7 +39,7 @@ Which will output the following:
 foobar.com <nil>
 ```
 
-### An example of creating and deleting a TXT record
+### Creating and deleting a TXT record
 
 ```go
 package main
@@ -55,21 +52,18 @@ import (
 )
 
 func main() {
-	v, err := vegadns2client.NewClient("http://localhost:5000")
+	v, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
 	if err != nil {
 		panic(err)
 	}
-
-	v.APIKey = "mykey"
-	v.APISecret = "mysecret"
 
 	ctx := context.Background()
 	
 	authZone, domainID, err := v.GetAuthZone(ctx, "example.com")
 	fmt.Println(authZone, domainID, err)
 
-	result := v.CreateTXT(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
-	fmt.Println(result)
+	err = v.CreateTXT(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
+	fmt.Println(err)
 
 	recordID, err := v.GetRecordID(ctx, domainID, "_acme-challenge.example.com", "TXT")
 	fmt.Println(recordID, err)

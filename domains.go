@@ -26,7 +26,7 @@ type DomainResponse struct {
 	Domains []Domain `json:"domains"`
 }
 
-// GetDomainID - returns the id for a domain.
+// GetDomainID returns the id for a domain.
 func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
 	params := make(url.Values)
 	params.Set("search", domain)
@@ -49,7 +49,7 @@ func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return -1, fmt.Errorf("get domain ID:bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
+		return -1, fmt.Errorf("get domain ID: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
 	}
 
 	answer := DomainResponse{}

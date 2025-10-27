@@ -9,11 +9,44 @@ import (
 	"time"
 )
 
+type Option func(*Client) error
+
+func WithBasicAuth(user, pass string) Option {
+	return func(c *Client) error {
+		c.user = user
+		c.pass = pass
+
+		return nil
+	}
+}
+
+func WithOAuth(key, secret string) Option {
+	return func(c *Client) error {
+		c.apiKey = key
+		c.apiSecret = secret
+
+		return nil
+	}
+}
+
+func WithHTTPClient(client *http.Client) Option {
+	return func(c *Client) error {
+		if client == nil {
+			c.client = client
+		}
+
+		return nil
+	}
+}
+
 type Client struct {
-	User      string
-	Pass      string
-	APIKey    string
-	APISecret string
+	// Basic Auth
+	user string
+	pass string
+
+	// OAuth
+	apiKey    string
+	apiSecret string
 
 	client  *http.Client
 	baseURL *url.URL
@@ -21,16 +54,25 @@ type Client struct {
 }
 
 // NewClient create a new [Client].
-func NewClient(baseURL string) (*Client, error) {
+func NewClient(baseURL string, opts ...Option) (*Client, error) {
 	bu, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, fmt.Errorf("parsing base URL: %w", err)
 	}
 
-	return &Client{
+	c := &Client{
 		client:  &http.Client{Timeout: 15 * time.Second},
 		baseURL: bu.JoinPath("1.0"),
-	}, nil
+	}
+
+	for _, opt := range opts {
+		err := opt(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c, nil
 }
 
 func (c *Client) newRequest(ctx context.Context, method string, endpoint *url.URL, params url.Values) (*http.Request, error) {
@@ -51,10 +93,10 @@ func (c *Client) newRequest(ctx context.Context, method string, endpoint *url.UR
 		return nil, fmt.Errorf("preparing request: %w", err)
 	}
 
-	if c.User != "" && c.Pass != "" {
+	if c.user != "" && c.pass != "" {
 		// Basic Auth
-		req.SetBasicAuth(c.User, c.Pass)
-	} else if c.APIKey != "" && c.APISecret != "" {
+		req.SetBasicAuth(c.user, c.pass)
+	} else if c.apiKey != "" && c.apiSecret != "" {
 		// OAuth
 		err := c.getAuthToken(ctx)
 		if err != nil {
