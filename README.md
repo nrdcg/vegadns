@@ -1,6 +1,10 @@
 # vegadns2client
 
-vegadns2client is a go client for [VegaDNS-API](https://github.com/shupp/VegaDNS-API).  This is an incomplete client, initially intended to support [lego](https://github.com/xenolf/lego).
+This is a fork of [vegadns2client](https://github.com/opendns/vegadns2client).
+
+vegadns2client is a go client for [VegaDNS-API](https://github.com/shupp/VegaDNS-API).
+
+This is an incomplete client, initially intended to support [lego](https://github.com/xenolf/lego).
 
 ## Example Usage
 
@@ -11,32 +15,32 @@ package main
 
 import (
 	"context"
-    "fmt"
+	"fmt"
 
-    "github.com/nrdcg/vegadns2client"
+	"github.com/nrdcg/vegadns2client"
 )
 
 func main() {
-    v, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
+	client, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
 	if err != nil {
 		panic(err)
 	}
 
 	ctx := context.Background()
 
-    authZone, domainID, err := v.GetAuthZone(ctx, "example.com")
-    fmt.Println(authZone, domainID, err)
+	authZone, domainID, err := client.GetAuthZone(ctx, "foo.example.com")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(authZone, domainID)
 }
 ```
 
 Which will output the following:
 
 ```
-2018/02/22 16:11:48 tmpHostname for i = 1: example.com
-2018/02/22 16:11:48 {ok 1 [{active example.com 2 0}]}
-2018/02/22 16:11:48 Found zone: example.com
-	Shortened to foobar.com
-foobar.com <nil>
+example.com 1
 ```
 
 ### Creating and deleting a TXT record
@@ -52,36 +56,42 @@ import (
 )
 
 func main() {
-	v, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
+	client, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
 	if err != nil {
 		panic(err)
 	}
 
 	ctx := context.Background()
-	
-	authZone, domainID, err := v.GetAuthZone(ctx, "example.com")
-	fmt.Println(authZone, domainID, err)
 
-	err = v.CreateTXTRecord(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
-	fmt.Println(err)
+	authZone, domainID, err := client.GetAuthZone(ctx, "example.com")
+	if err != nil {
+		panic(err)
+	}
 
-	recordID, err := v.GetRecordID(ctx, domainID, "_acme-challenge.example.com", "TXT")
-	fmt.Println(recordID, err)
+	fmt.Println(authZone, domainID)
 
-	err = v.DeleteRecord(ctx, recordID)
-	fmt.Println(err)
+	err = client.CreateTXTRecord(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
+	if err != nil {
+		panic(err)
+	}
+
+	recordID, err := client.GetRecordID(ctx, domainID, "_acme-challenge.example.com", "TXT")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(recordID)
+
+	err = client.DeleteRecord(ctx, recordID)
+	if err != nil {
+		panic(err)
+	}
 }
 ```
 
 Which will output the following:
 
 ```
-2018/02/26 14:59:53 tmpHostname for i = 1: example.com
-2018/02/26 14:59:53 {ok 1 [{active example.com 1 0}]}
-2018/02/26 14:59:53 Found zone: example.com
-	Shortened to example.com
-example.com 1 <nil>
-<nil>
-3 <nil>
-<nil>
+example.com 1
+3
 ```
