@@ -1,0 +1,30 @@
+{
+  "status": "200",
+  "total_records": 2,
+  "domain": {
+    "status": "active",
+    "domain": "example.com",
+    "domain_id": 1,
+    "owner_id": 0
+  },
+  "records": [
+    {
+      "name": "foo",
+      "value": "bar",
+      "record_type": "TXT",
+      "ttl": 120,
+      "record_id": 10,
+      "location_id": "1",
+      "domain_id": 1
+    },
+    {
+      "name": "fii",
+      "value": "bir",
+      "record_type": "TXT",
+      "ttl": 120,
+      "record_id": 20,
+      "location_id": "1",
+      "domain_id": 1
+    }
+  ]
+}

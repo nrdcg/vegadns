@@ -3,7 +3,6 @@ package vegadns2client
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -59,11 +58,8 @@ func (c *Client) GetAuthZone(ctx context.Context, fqdn string) (string, int, err
 	numComponents := len(strings.Split(fqdn, "."))
 	for i := 1; i < numComponents; i++ {
 		tmpHostname := strings.SplitN(fqdn, ".", i)[i-1]
-		log.Printf("tmpHostname for i = %d: %s\n", i, tmpHostname)
 
 		if domainID, err := c.GetDomainID(ctx, tmpHostname); err == nil {
-			log.Printf("Found zone: %s\n\tShortened to %s\n", tmpHostname, strings.TrimSuffix(tmpHostname, "."))
-
 			return strings.TrimSuffix(tmpHostname, "."), domainID, nil
 		}
 	}

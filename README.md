@@ -62,7 +62,7 @@ func main() {
 	authZone, domainID, err := v.GetAuthZone(ctx, "example.com")
 	fmt.Println(authZone, domainID, err)
 
-	err = v.CreateTXT(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
+	err = v.CreateTXTRecord(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
 	fmt.Println(err)
 
 	recordID, err := v.GetRecordID(ctx, domainID, "_acme-challenge.example.com", "TXT")

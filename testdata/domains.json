@@ -1,0 +1,10 @@
+{
+  "domains": [
+    {
+      "domain_id": 1,
+      "domain": "example.com",
+      "status": "active",
+      "owner_id": 0
+    }
+  ]
+}

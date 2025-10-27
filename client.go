@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const contentType = "application/x-www-form-urlencoded"
+
 type Option func(*Client) error
 
 func WithBasicAuth(user, pass string) Option {
@@ -131,7 +133,7 @@ func (c *Client) newRequest(ctx context.Context, method string, endpoint *url.UR
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", contentType)
 
 	return req, nil
 }
@@ -144,22 +146,16 @@ func (c *Client) setAuth(ctx context.Context, req *http.Request) error {
 
 	// OAuth
 	case c.apiKey != "" && c.apiSecret != "":
-		err := c.getAuthToken(ctx)
-		if err != nil {
-			return err
+		if c.token.valid() != nil {
+			token, err := c.getAuthToken(ctx)
+			if err != nil {
+				return err
+			}
+
+			c.token = token
 		}
 
-		err = c.token.valid()
-		if err != nil {
-			return err
-		}
-
-		bearer, err := c.getBearer(ctx)
-		if err != nil {
-			return err
-		}
-
-		req.Header.Set("Authorization", bearer)
+		req.Header.Set("Authorization", c.token.formatBearer())
 	}
 
 	return nil

@@ -1,8 +1,8 @@
 package vegadns2client
 
 import (
+	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,18 +10,58 @@ import (
 )
 
 func TestClient_GetDomainID(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"domains":[{"domain_id":1,"domain":"example.com","status":"active","owner_id":0}]}`))
-	}))
+	client, mux := setupTest(t)
 
-	t.Cleanup(server.Close)
+	mux.HandleFunc("GET /1.0/domains", func(rw http.ResponseWriter, req *http.Request) {
+		if req.Header.Get("Content-Type") != contentType {
+			http.Error(rw,
+				fmt.Sprintf("Content-Type header: got '%s', want '%s'",
+					req.Header.Get("Content-Type"), contentType),
+				http.StatusBadRequest)
 
-	client, err := NewClient(server.URL, WithBasicAuth("user@example.com", "secret"), WithHTTPClient(server.Client()))
-	require.NoError(t, err)
+			return
+		}
+
+		if req.URL.Query().Get("search") != "example.com" {
+			http.Error(rw, fmt.Sprintf("search: got '%s', want 'example.com'", req.URL.Query().Get("search")), http.StatusBadRequest)
+
+			return
+		}
+
+		fromTestData("domains.json").ServeHTTP(rw, req)
+	})
 
 	domainID, err := client.GetDomainID(t.Context(), "example.com")
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, domainID)
+}
+
+func TestClient_GetAuthZone(t *testing.T) {
+	client, mux := setupTest(t)
+
+	mux.HandleFunc("GET /1.0/domains", func(rw http.ResponseWriter, req *http.Request) {
+		if req.Header.Get("Content-Type") != contentType {
+			http.Error(rw,
+				fmt.Sprintf("Content-Type header: got '%s', want '%s'",
+					req.Header.Get("Content-Type"), contentType),
+				http.StatusBadRequest)
+
+			return
+		}
+
+		if req.URL.Query().Get("search") != "example.com" {
+			http.Error(rw, fmt.Sprintf("search: got '%s', want 'example.com'", req.URL.Query().Get("search")), http.StatusBadRequest)
+
+			return
+		}
+
+		fromTestData("domains.json").ServeHTTP(rw, req)
+	})
+
+	zone, domainID, err := client.GetAuthZone(t.Context(), "foo.example.com")
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, domainID)
+	assert.Equal(t, "example.com", zone)
 }

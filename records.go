@@ -54,8 +54,8 @@ func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordTy
 	return -1, errors.New("record not found")
 }
 
-// CreateTXT creates a TXT record.
-func (c *Client) CreateTXT(ctx context.Context, domainID int, fqdn, value string, ttl int) error {
+// CreateTXTRecord creates a TXT record.
+func (c *Client) CreateTXTRecord(ctx context.Context, domainID int, fqdn, value string, ttl int) error {
 	params := make(url.Values)
 	params.Set("record_type", "TXT")
 	params.Set("ttl", strconv.Itoa(ttl))
