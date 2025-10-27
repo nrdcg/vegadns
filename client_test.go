@@ -17,11 +17,13 @@ func TestGetDomainID(t *testing.T) {
 
 	t.Cleanup(server.Close)
 
-	v := NewClient(server.URL)
-	v.User = "user@example.com"
-	v.Pass = "secret"
+	client, err := NewClient(server.URL)
+	require.NoError(t, err)
 
-	domainID, err := v.GetDomainID(t.Context(), "example.com")
+	client.User = "user@example.com"
+	client.Pass = "secret"
+
+	domainID, err := client.GetDomainID(t.Context(), "example.com")
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, domainID)

@@ -44,12 +44,10 @@ func (c *Client) getBearer(ctx context.Context) (string, error) {
 }
 
 func (c *Client) getAuthToken(ctx context.Context) error {
-	tokenEndpoint := c.getURL("token")
+	data := url.Values{}
+	data.Set("grant_type", "client_credentials")
 
-	v := url.Values{}
-	v.Set("grant_type", "client_credentials")
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenEndpoint, strings.NewReader(v.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL.JoinPath("token").String(), strings.NewReader(data.Encode()))
 	if err != nil {
 		return fmt.Errorf("get auth token: %w", err)
 	}

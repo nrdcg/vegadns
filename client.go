@@ -10,32 +10,36 @@ import (
 )
 
 type Client struct {
-	client    *http.Client
-	baseURL   string
-	version   string
 	User      string
 	Pass      string
 	APIKey    string
 	APISecret string
-	token     Token
+
+	client  *http.Client
+	baseURL *url.URL
+	token   Token
 }
 
 // NewClient create a new [Client].
-func NewClient(baseURL string) *Client {
+func NewClient(baseURL string) (*Client, error) {
+	bu, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("parsing base URL: %w", err)
+	}
+
 	return &Client{
 		client:  &http.Client{Timeout: 15 * time.Second},
-		baseURL: baseURL,
-		version: "1.0",
-	}
+		baseURL: bu.JoinPath("1.0"),
+	}, nil
 }
 
 // Send a request to VegaDNS.
-func (c *Client) Send(ctx context.Context, method, endpoint string, params map[string]string) (*http.Response, error) {
-	vegaURL := c.getURL(endpoint)
+func (c *Client) Send(ctx context.Context, method, urn string, params map[string]string) (*http.Response, error) {
+	endpoint := c.baseURL.JoinPath(urn)
 
-	p := url.Values{}
+	data := url.Values{}
 	for k, v := range params {
-		p.Set(k, v)
+		data.Set(k, v)
 	}
 
 	var (
@@ -44,10 +48,11 @@ func (c *Client) Send(ctx context.Context, method, endpoint string, params map[s
 	)
 
 	if method == http.MethodGet || method == http.MethodDelete {
-		vegaURL = fmt.Sprintf("%s?%s", vegaURL, p.Encode())
-		req, err = http.NewRequestWithContext(ctx, method, vegaURL, nil)
+		endpoint.RawQuery = data.Encode()
+
+		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), nil)
 	} else {
-		req, err = http.NewRequestWithContext(ctx, method, vegaURL, strings.NewReader(p.Encode()))
+		req, err = http.NewRequestWithContext(ctx, method, endpoint.String(), strings.NewReader(data.Encode()))
 	}
 
 	if err != nil {
@@ -80,8 +85,4 @@ func (c *Client) Send(ctx context.Context, method, endpoint string, params map[s
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return c.client.Do(req)
-}
-
-func (c *Client) getURL(endpoint string) string {
-	return fmt.Sprintf("%s/%s/%s", c.baseURL, c.version, endpoint)
 }
