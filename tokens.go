@@ -3,8 +3,8 @@ package vegadns2client
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,23 +31,26 @@ func (t Token) formatBearer() string {
 	return "Bearer " + t.Token
 }
 
-func (c *Client) getBearer() string {
+func (c *Client) getBearer() (string, error) {
 	if c.token.valid() != nil {
-		c.getAuthToken()
+		err := c.getAuthToken()
+		if err != nil {
+			return "", err
+		}
 	}
 
-	return c.token.formatBearer()
+	return c.token.formatBearer(), nil
 }
 
-func (c *Client) getAuthToken() {
+func (c *Client) getAuthToken() error {
 	tokenEndpoint := c.getURL("token")
 
 	v := url.Values{}
 	v.Set("grant_type", "client_credentials")
 
-	req, err := http.NewRequest("POST", tokenEndpoint, strings.NewReader(v.Encode()))
+	req, err := http.NewRequest(http.MethodPost, tokenEndpoint, strings.NewReader(v.Encode()))
 	if err != nil {
-		log.Fatalf("get AuthToken: %s", err)
+		return fmt.Errorf("get auth token: %w", err)
 	}
 
 	req.SetBasicAuth(c.APIKey, c.APISecret)
@@ -57,26 +60,28 @@ func (c *Client) getAuthToken() {
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		log.Fatalf("Error sending POST to getAuthToken: %s", err)
+		return fmt.Errorf("get auth token: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Error reading response from POST to getAuthToken: %s", err)
+		return fmt.Errorf("get auth token: response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Got bad answer from VegaDNS on getAuthToken. Code: %d. Message: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("get auth token: bad answer from VegaDNS (code: %d, message: %s)", resp.StatusCode, string(body))
 	}
 
 	if err := json.Unmarshal(body, &c.token); err != nil {
-		log.Fatalf("Error unmarshalling body of POST to getAuthToken: %s", err)
+		return fmt.Errorf("get auth token: unmarshalling body: %w", err)
 	}
 
 	if c.token.TokenType != "bearer" {
-		log.Fatal("We don't support anything except bearer tokens")
+		return fmt.Errorf("get auth token: don't support anything except bearer tokens (token type: %s)", c.token.TokenType)
 	}
 
 	c.token.ExpiresAt = issueTime.Add(time.Duration(c.token.ExpiresIn) * time.Second)
+
+	return nil
 }

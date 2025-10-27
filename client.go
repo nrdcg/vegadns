@@ -59,14 +59,22 @@ func (c *Client) Send(method, endpoint string, params map[string]string) (*http.
 		req.SetBasicAuth(c.User, c.Pass)
 	} else if c.APIKey != "" && c.APISecret != "" {
 		// OAuth
-		c.getAuthToken()
+		err := c.getAuthToken()
+		if err != nil {
+			return nil, err
+		}
 
 		err = c.token.valid()
 		if err != nil {
 			return nil, err
 		}
 
-		req.Header.Set("Authorization", c.getBearer())
+		bearer, err := c.getBearer()
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", bearer)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
