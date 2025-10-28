@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 )
 
 // Record struct representing a Record object.
@@ -29,7 +28,7 @@ type RecordsResponse struct {
 }
 
 // GetRecordID helper to get the id of a record.
-func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordType string) (int, error) {
+func (c *Client) GetRecordID(ctx context.Context, domainID int, name, recordType string) (int, error) {
 	params := make(url.Values)
 	params.Set("domain_id", strconv.Itoa(domainID))
 
@@ -46,7 +45,7 @@ func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordTy
 	}
 
 	for _, r := range answer.Records {
-		if r.Name == record && r.RecordType == recordType {
+		if r.Name == name && r.RecordType == recordType {
 			return r.RecordID, nil
 		}
 	}
@@ -55,12 +54,12 @@ func (c *Client) GetRecordID(ctx context.Context, domainID int, record, recordTy
 }
 
 // CreateTXTRecord creates a TXT record.
-func (c *Client) CreateTXTRecord(ctx context.Context, domainID int, fqdn, value string, ttl int) error {
+func (c *Client) CreateTXTRecord(ctx context.Context, domainID int, name, value string, ttl int) error {
 	params := make(url.Values)
 	params.Set("record_type", "TXT")
 	params.Set("ttl", strconv.Itoa(ttl))
 	params.Set("domain_id", strconv.Itoa(domainID))
-	params.Set("name", strings.TrimSuffix(fqdn, "."))
+	params.Set("name", name)
 	params.Set("value", value)
 
 	req, err := c.newRequest(ctx, http.MethodPost, c.baseURL.JoinPath("records"), params)

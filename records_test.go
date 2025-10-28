@@ -77,7 +77,7 @@ func TestClient_CreateTXTRecord(t *testing.T) {
 		rw.WriteHeader(http.StatusCreated)
 	})
 
-	err := client.CreateTXTRecord(t.Context(), 1, "foo.example.com.", "txt", 120)
+	err := client.CreateTXTRecord(t.Context(), 1, "foo.example.com", "txt", 120)
 	require.NoError(t, err)
 }
 
