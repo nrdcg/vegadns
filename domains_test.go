@@ -1,4 +1,4 @@
-package vegadns2client
+package vegadns
 
 import (
 	"fmt"

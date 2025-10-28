@@ -1,8 +1,8 @@
-# vegadns2client
+# vegadns
 
 This is a fork of [vegadns2client](https://github.com/opendns/vegadns2client).
 
-vegadns2client is a go client for [VegaDNS-API](https://github.com/shupp/VegaDNS-API).
+vegadns is a go client for [VegaDNS-API](https://github.com/shupp/VegaDNS-API).
 
 This is an incomplete client, initially intended to support [lego](https://github.com/xenolf/lego).
 
@@ -17,11 +17,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nrdcg/vegadns2client"
+	"github.com/nrdcg/vegadns"
 )
 
 func main() {
-	client, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
+	client, err := vegadns.NewClient("http://localhost:5000", vegadns.WithOAuth("mykey", "mysecret"))
 	if err != nil {
 		panic(err)
 	}
@@ -52,11 +52,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nrdcg/vegadns2client"
+	"github.com/nrdcg/vegadns"
 )
 
 func main() {
-	client, err := vegadns2client.NewClient("http://localhost:5000", vegadns2client.WithOAuth("mykey", "mysecret"))
+	client, err := vegadns.NewClient("http://localhost:5000", vegadns.WithOAuth("mykey", "mysecret"))
 	if err != nil {
 		panic(err)
 	}

@@ -1,4 +1,4 @@
-module github.com/nrdcg/vegadns2client
+module github.com/nrdcg/vegadns
 
 go 1.24.0
 
