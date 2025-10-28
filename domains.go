@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 // Domain struct containing a domain object.
@@ -47,22 +46,4 @@ func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
 	}
 
 	return -1, fmt.Errorf("domain %s not found", domain)
-}
-
-// GetAuthZone retrieves the closest match to a given domain.
-// Example: Given an argument "a.b.c.d.e", and a VegaDNS hosted domain of "c.d.e",
-// GetClosestMatchingDomain will return "c.d.e".
-func (c *Client) GetAuthZone(ctx context.Context, fqdn string) (string, int, error) {
-	fqdn = strings.TrimSuffix(fqdn, ".")
-
-	numComponents := len(strings.Split(fqdn, "."))
-	for i := 1; i < numComponents; i++ {
-		tmpHostname := strings.SplitN(fqdn, ".", i)[i-1]
-
-		if domainID, err := c.GetDomainID(ctx, tmpHostname); err == nil {
-			return strings.TrimSuffix(tmpHostname, "."), domainID, nil
-		}
-	}
-
-	return "", -1, fmt.Errorf("unable to find auth zone for fqdn %s", fqdn)
 }
