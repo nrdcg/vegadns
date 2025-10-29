@@ -8,7 +8,7 @@ This is an incomplete client, initially intended to support [lego](https://githu
 
 ## Example Usage
 
-### Looking up the auth zone for a hostname
+### Getting a domain ID
 
 ```go
 package main
@@ -27,20 +27,20 @@ func main() {
 	}
 
 	ctx := context.Background()
-
-	authZone, domainID, err := client.GetAuthZone(ctx, "foo.example.com")
+	
+	domainID, err := client.GetDomainID(ctx, "example.com")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(authZone, domainID)
+	fmt.Println("domainID:", domainID)
 }
 ```
 
 Which will output the following:
 
 ```
-example.com 1
+domainID: 1
 ```
 
 ### Creating and deleting a TXT record
@@ -63,12 +63,12 @@ func main() {
 
 	ctx := context.Background()
 
-	authZone, domainID, err := client.GetAuthZone(ctx, "example.com")
+	domainID, err := client.GetDomainID(ctx, "example.com")
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(authZone, domainID)
+	fmt.Println("domainID:", domainID)
 
 	err = client.CreateTXTRecord(ctx, domainID, "_acme-challenge.example.com", "test challenge", 25)
 	if err != nil {
@@ -80,7 +80,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(recordID)
+	fmt.Println("recordID:", recordID)
 
 	err = client.DeleteRecord(ctx, recordID)
 	if err != nil {
@@ -92,6 +92,6 @@ func main() {
 Which will output the following:
 
 ```
-example.com 1
-3
+domainID: 1
+recordID: 3
 ```
