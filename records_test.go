@@ -37,6 +37,39 @@ func TestClient_GetRecordID(t *testing.T) {
 	assert.Equal(t, 10, recordID)
 }
 
+func TestClient_GetRecords(t *testing.T) {
+	client, mux := setupTest(t)
+
+	mux.HandleFunc("GET /1.0/records", func(rw http.ResponseWriter, req *http.Request) {
+		if req.Header.Get("Content-Type") != contentType {
+			http.Error(rw,
+				fmt.Sprintf("Content-Type header: got '%s', want '%s'",
+					req.Header.Get("Content-Type"), contentType),
+				http.StatusBadRequest)
+
+			return
+		}
+
+		if req.URL.Query().Get("domain_id") != "1" {
+			http.Error(rw, fmt.Sprintf("domain_id: got '%s', want '1'", req.URL.Query().Get("domain_id")), http.StatusBadRequest)
+
+			return
+		}
+
+		fromTestData("records.json").ServeHTTP(rw, req)
+	})
+
+	records, err := client.GetRecords(t.Context(), 1)
+	require.NoError(t, err)
+
+	expected := []Record{
+		{Name: "foo", Value: "bar", RecordType: "TXT", TTL: 120, RecordID: 10, LocationID: "1", DomainID: 1},
+		{Name: "fii", Value: "bir", RecordType: "TXT", TTL: 120, RecordID: 20, LocationID: "1", DomainID: 1},
+	}
+
+	assert.Equal(t, expected, records)
+}
+
 func TestClient_CreateTXTRecord(t *testing.T) {
 	client, mux := setupTest(t)
 

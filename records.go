@@ -29,28 +29,38 @@ type RecordsResponse struct {
 
 // GetRecordID helper to get the id of a record.
 func (c *Client) GetRecordID(ctx context.Context, domainID int, name, recordType string) (int, error) {
-	params := make(url.Values)
-	params.Set("domain_id", strconv.Itoa(domainID))
-
-	req, err := c.newRequest(ctx, http.MethodGet, c.baseURL.JoinPath("records"), params)
+	records, err := c.GetRecords(ctx, domainID)
 	if err != nil {
 		return -1, err
 	}
 
-	answer := RecordsResponse{}
-
-	err = c.do(req, http.StatusOK, &answer)
-	if err != nil {
-		return -1, err
-	}
-
-	for _, r := range answer.Records {
+	for _, r := range records {
 		if r.Name == name && r.RecordType == recordType {
 			return r.RecordID, nil
 		}
 	}
 
 	return -1, errors.New("record not found")
+}
+
+// GetRecords retrieves all DNS records associated with the specified domain ID.
+func (c *Client) GetRecords(ctx context.Context, domainID int) ([]Record, error) {
+	params := make(url.Values)
+	params.Set("domain_id", strconv.Itoa(domainID))
+
+	req, err := c.newRequest(ctx, http.MethodGet, c.baseURL.JoinPath("records"), params)
+	if err != nil {
+		return nil, err
+	}
+
+	answer := RecordsResponse{}
+
+	err = c.do(req, http.StatusOK, &answer)
+	if err != nil {
+		return nil, err
+	}
+
+	return answer.Records, nil
 }
 
 // CreateTXTRecord creates a TXT record.
