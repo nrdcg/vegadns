@@ -9,6 +9,7 @@ import (
 )
 
 // Record struct representing a Record object.
+// https://github.com/shupp/VegaDNS-API/blob/master/records_format.json
 type Record struct {
 	Name       string `json:"name"`
 	Value      string `json:"value"`
@@ -44,6 +45,7 @@ func (c *Client) GetRecordID(ctx context.Context, domainID int, name, recordType
 }
 
 // GetRecords retrieves all DNS records associated with the specified domain ID.
+// https://generator.swagger.io/?url=https://raw.githubusercontent.com/shupp/VegaDNS-API/refs/heads/master/swagger/vegadns.swagger.json#/Records/get_records
 func (c *Client) GetRecords(ctx context.Context, domainID int) ([]Record, error) {
 	params := make(url.Values)
 	params.Set("domain_id", strconv.Itoa(domainID))
@@ -64,6 +66,7 @@ func (c *Client) GetRecords(ctx context.Context, domainID int) ([]Record, error)
 }
 
 // CreateTXTRecord creates a TXT record.
+// https://generator.swagger.io/?url=https://raw.githubusercontent.com/shupp/VegaDNS-API/refs/heads/master/swagger/vegadns.swagger.json#/Records/post_records
 func (c *Client) CreateTXTRecord(ctx context.Context, domainID int, name, value string, ttl int) error {
 	params := make(url.Values)
 	params.Set("record_type", "TXT")
@@ -80,7 +83,8 @@ func (c *Client) CreateTXTRecord(ctx context.Context, domainID int, name, value 
 	return c.do(req, http.StatusCreated, nil)
 }
 
-// DeleteRecord deletes a record by id.
+// DeleteRecord deletes a record.
+// https://generator.swagger.io/?url=https://raw.githubusercontent.com/shupp/VegaDNS-API/refs/heads/master/swagger/vegadns.swagger.json#/Records/delete_records__record_id_
 func (c *Client) DeleteRecord(ctx context.Context, recordID int) error {
 	req, err := c.newRequest(ctx, http.MethodDelete, c.baseURL.JoinPath("records", strconv.Itoa(recordID)), nil)
 	if err != nil {

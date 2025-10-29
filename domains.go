@@ -39,6 +39,7 @@ func (c *Client) GetDomainID(ctx context.Context, domain string) (int, error) {
 }
 
 // GetDomains gets domains.
+// https://generator.swagger.io/?url=https://raw.githubusercontent.com/shupp/VegaDNS-API/refs/heads/master/swagger/vegadns.swagger.json#/Domains/get_domains
 func (c *Client) GetDomains(ctx context.Context, domain string) ([]Domain, error) {
 	params := make(url.Values)
 
