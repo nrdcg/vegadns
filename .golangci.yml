@@ -35,6 +35,9 @@ linters:
     godox:
       keywords:
         - FIXME
+    gosec:
+      excludes:
+        - G704
     gocyclo:
       min-complexity: 12
     depguard:
@@ -55,6 +58,11 @@ linters:
       - comments
       - common-false-positives
       - std-error-handling
+    rules:
+      - path: (.*)_test\.go
+        text: "G120:"
+        linters:
+          - gosec
 
 issues:
   max-issues-per-linter: 0

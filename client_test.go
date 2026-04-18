@@ -71,7 +71,7 @@ func TestClient_setAuth_oauth(t *testing.T) {
 	client, err := NewClient(server.URL, WithOAuth("user", "secret"), WithHTTPClient(server.Client()))
 	require.NoError(t, err)
 
-	req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
 
 	err = client.setAuth(t.Context(), req)
 	require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestClient_setAuth_oauth_existing_token(t *testing.T) {
 		ExpiresAt: time.Now().Add(50 * time.Second),
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
 
 	err = client.setAuth(t.Context(), req)
 	require.NoError(t, err)
@@ -121,7 +121,7 @@ func TestClient_setAuth_basic_auth(t *testing.T) {
 	client, err := NewClient(server.URL, WithBasicAuth("user", "secret"), WithHTTPClient(server.Client()))
 	require.NoError(t, err)
 
-	req := httptest.NewRequest(http.MethodGet, "https://example.com", nil)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "https://example.com", nil)
 
 	err = client.setAuth(t.Context(), req)
 	require.NoError(t, err)
